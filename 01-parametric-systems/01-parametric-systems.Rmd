@@ -1,0 +1,111 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This notebook has some experiments with parametric systems.
+
+Load packages:
+```{r}
+library(glue)
+library(MexBrewer)
+library(tidyverse)
+```
+
+First I lifted some code from Antonio Sánchez Chinchón (see here: https://twitter.com/aschinchon/status/1499138667616604168). I modified it to introduce some randomness and the colors are from {MexBrewer}:
+```{r eval=FALSE}
+seq(-3, 3, by = 0.01) %>%
+  expand.grid(x = ., y = .) %>%
+  mutate(ex = runif(n(), -0.25, 0.25),
+         ey = runif(n()), -0.25, 0.25) %>%
+  ggplot(aes(x = (1 - x - sin(y^2) + ex), 
+             y = (1 - y - cos(x^2) + ey))) +
+  geom_point(aes(color = x * y),
+             alpha = 0.05, 
+             shape = 20, 
+             size = 0)+
+  scale_color_gradientn(colors = MexBrewer::mex.brewer("Atentado"))  +
+  coord_polar()+
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                        fill = "black"))
+```
+
+This other chunk introduces more random parameters. (Try with geom_path: it takes much longer to render but the results are interesting):
+```{r}
+# Set a seed
+seed <- sample.int(10000, 1)
+set.seed(seed)
+
+# Select a color palette at random
+palette_name <- sample(c("Alacena", "Atentado", "Revolucion", "Ronda"), 1)
+col_palette <- mex.brewer(palette_name)
+
+# Generate the system and plot
+seq(-3, 3, by = 0.01) %>%
+  expand.grid(x = ., y = .) %>%
+  mutate(ex = runif(n(), -0.25, 0.25),
+         ey = runif(n()), -0.25, 0.25,
+         x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+         y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point(aes(color = x * y),
+             alpha = 0.05, 
+             shape = 20, 
+             size = 0) +
+  scale_color_gradientn(colors = col_palette) +
+  coord_polar(start = runif(1, 0, 2 * pi),
+                       direction = sample(c(-1, 1), 1)) +
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                        fill = "black"),
+        plot.background = element_rect(color = NA,
+                                       fill = "black"))
+
+# Save
+ggsave(glue("par-system-{seed}-{palette_name}.png"),
+       height = 7,
+       width = 7,
+       units = "in")
+```
+
+
+```{r}
+# Set a seed
+seed <- sample.int(10000, 1)
+set.seed(seed)
+
+# Select a color palette at random
+palette_name <- sample(c("Alacena", "Atentado", "Revolucion", "Ronda"), 1)
+col_palette <- mex.brewer(palette_name)
+
+# Generate the system and plot
+seq(-3, 3, by = 0.01) %>%
+  expand.grid(x = ., y = .) %>%
+  mutate(ex = runif(n(), -0.25, 0.25),
+         ey = runif(n()), -0.25, 0.25,
+         x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+         y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_path(aes(color = x * y),
+             alpha = 0.05, 
+             size = 0) +
+  scale_color_gradientn(colors = col_palette) +
+  coord_polar(start = runif(1, 0, 2 * pi),
+                       direction = sample(c(-1, 1), 1)) +
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                        fill = "black"),
+        plot.background = element_rect(color = NA,
+                                       fill = "black"))
+
+# Save
+ggsave(glue("par-system-path-{seed}-{palette_name}.png"),
+       height = 7,
+       width = 7,
+       units = "in")
+```
+

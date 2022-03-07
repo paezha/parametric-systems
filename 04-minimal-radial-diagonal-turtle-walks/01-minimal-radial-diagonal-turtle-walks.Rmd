@@ -1,0 +1,96 @@
+---
+title: "R Notebook"
+output: html_document
+---
+
+Check Ijeamaka Anyene's minimal radial patterns (https://github.com/Ijeamakaanyene/patterns)
+
+If needed install package ({MexBrewer})[https://paezha.github.io/MexBrewer/]:
+```{r}
+if (!require("MexBrewer")) remotes::install_github("paezha/MexBrewer") 
+```
+
+Load packages:
+```{r}
+library(ggforce)
+library(glue)
+library(MexBrewer)
+library(MetBrewer)
+library(tidyverse)
+```
+
+Minimal radial walk with diagonals:
+```{r}
+# Set random seed
+seed <- sample.int(100000, 1)
+set.seed(seed)
+
+# Initialize radius of circle
+rad <- runif(1, 0.15, 0.90)
+
+# Initialize the data frame
+df <- data.frame(x = 0, y = 0)
+
+# Initialize the angle; this parameter is important, if it coincides with some values it creates closed polygons
+angle <- runif(1, 0, 180) * pi/180
+
+# The walk is as follows: the turtle walks from it initial position at (0,0) a distance of rad with direction angle * i, and the from that point takes a new step _without returning to the initial position_
+for(i in 1:sample.int(50, 1)){
+  df <- df %>%
+    rbind(df %>%
+            slice_tail() %>%
+            mutate(x = x + rad * cos(angle * i),
+                   y = y + rad * sin(angle * i)))
+}
+
+# Randomly select a color palette (MexBrewer Edition)
+palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+col_palette <- mex.brewer(palette_name, n = 25)
+
+# Randomly select a color palette (MetBrewer Edition)
+# palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
+# col_palette <- met.brewer(palette_name, n = 25)
+
+# Select a color from the palette
+col_fill <- sample(col_palette, 2)
+
+# Jitter coordinates of center of circle
+x0 <- jitter(mean(df$x), 0.9)
+y0 <- jitter(mean(df$y), 0.9)  
+
+# Randomly select the strength of the diagonal lines (a parameter of geom_diagonal())
+s <- runif(1, 0.25, 0.75)
+
+# Plot
+ggplot() +
+  # Plot circle to serve as background to the radial pattern
+  geom_circle(aes(x0 = x0, y0 = y0,
+                  # The radius of the circle is 3/4 *rad <= r <= 9/4 * rad
+                  r = rad/runif(1, 3/4, 9/4)),
+              # Use the first color to fill the circle
+              fill = col_fill[1],
+              color = NA) + 
+  # Plot walk using geom_diag
+  geom_diagonal(data = df,
+                aes(x, y, 
+                    xend = 0, yend = 0,
+                    size = stat(index),
+                    alpha = stat(index)),
+                color = col_fill[2],
+                size = 1,
+                strength = s) +
+  # Set the limits of the plot
+  coord_equal(xlim = c(x0 - rad, 
+                       x0 + rad), 
+              ylim = c(y0 - rad, 
+                       y0 + rad)) + 
+  # Theme parameters
+  theme_void() + 
+  theme(legend.position = "none",
+        # The background of the plot is the same color as the diagonal lines
+        plot.background = element_rect(color = NA,
+                                       fill = col_fill[2]))
+
+# Save plot
+ggsave(glue("minimal-radial-walk-{palette_name}-{seed}.png"))
+```

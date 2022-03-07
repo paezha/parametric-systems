@@ -1,0 +1,800 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+I will try some "turtle" plots, which are like directed walks. See here: https://fronkonstin.com/2014/07/07/four-simple-turtle-graphs-to-play-with-kids/.
+
+Load packages:
+```{r}
+library(ggforce)
+library(MexBrewer)
+library(tidyverse)
+```
+
+## Example 1
+
+This is a simple example. The turtle takes steps of size 1 + 0.5 * i in the direction of angle * i _and then returns to the origin_ before taking another step:
+```{r}
+df <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- -89.5 * pi/180
+
+for(i in 1:150){
+  df <- df %>%
+    rbind(data.frame(x = (1 + 0.5 * i) * cos(angle * i),
+                     y = (1 + 0.5 * i) * sin(angle * i)))
+}
+```
+
+Plot the path:
+```{r}
+ggplot() +
+  geom_path(data = df,
+            aes(x, y)) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Plot with polygons:
+```{r}
+#col_palette <- mex.brewer("Atentado")
+
+ggplot() +
+  geom_polygon(data = df %>%
+                 #mutate(color = runif(n()), fill = color),
+                 mutate(color = runif(n()), fill = color),
+               aes(x, y)) + 
+  #scale_fill_gradientn(colors = #col_palette) +
+  coord_equal() + 
+  theme_void()
+```
+
+In this variation, the length of the step is compounded at each step:
+```{r}
+df <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- -89.5 * pi/180
+
+for(i in 1:150){
+  df <- df %>%
+    rbind(data.frame(x = (1.01)^i * cos(angle * i),
+                     y = (1.001)^i * sin(angle * i)))
+}
+```
+
+Plot the path:
+```{r}
+ggplot() +
+  geom_path(data = df,
+            aes(x, y),
+            size = 0) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Plot with polygons:
+```{r}
+ggplot() +
+  geom_polygon(data = df[2:nrow(df),],
+               aes(x, y)) + 
+  coord_equal() + 
+  theme_void()
+``` 
+
+Plot as segments:
+```{r}
+ggplot() +
+  geom_segment(data = df,
+               aes(x, y, xend = 0, yend = 0),
+               size = 0) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Add a symbol at the end of the segment:
+```{r}
+ggplot() +
+  geom_segment(data = df,
+               aes(x, y, xend = 0, yend = 0),
+               size = 0) + 
+  geom_point(data = df %>%
+               slice_sample(prop = 0.25) %>%
+               mutate(size = runif(n(), 0, 10)),
+             aes(x, 
+                 y,
+                 size = size)) + 
+  scale_size(range = c(0, 5)) +
+  coord_equal() + 
+  theme_void() + 
+  theme(legend.position = "none")
+```
+Create a second turtle path:
+```{r}
+df2 <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- -49.5 * pi/180
+
+for(i in 1:150){
+  df2 <- df2 %>%
+    rbind(data.frame(x = (1.003)^i * cos(angle * i),
+                     y = (1.01)^i * sin(angle * i)))
+}
+```
+
+
+Plot as segments:
+```{r}
+ggplot() +
+  geom_segment(data = df2,
+               aes(x, y, xend = 0, yend = 0),
+               size = 0) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Bind data frames:
+```{r}
+df <- rbind(df,
+            df2)
+```
+
+Add a symbol at the end of the segment:
+```{r}
+set.seed(356345)
+
+df_sliced <- df %>%
+  slice_sample(prop = 0.25) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+ggplot() +
+  geom_segment(data = df,
+               aes(x, y, xend = 0, yend = 0),
+               alpha = 0.25,
+               color = "black",
+               size = 0) + 
+  geom_point(data = df,
+             aes(x, 
+                 y),
+             color = "black",
+             size = 0.3) + 
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "black") + 
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) + 
+  scale_color_manual(values = c("1" = "#FF0000", "2" = "#0000FF", "3" = "#FFFF00")) +
+  scale_size(range = c(1, 4)) +
+  coord_equal() + 
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(fill = "white"))
+```
+
+Pack it all:
+```{r}
+seed <- sample.int(100000, 1)
+set.seed(seed)
+
+df <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- -89.5 * pi/180
+
+step_f1 <- jitter(1, amount = 0.01)
+step_f2 <- jitter(1, amount = 0.01)
+
+n_1 <- round(runif(1, 70, 200))
+
+for(i in 1:n_1){
+  df <- df %>%
+    rbind(data.frame(x = (step_f1)^i * cos(angle * i),
+                     y = (step_f2)^i * sin(angle * i)))
+}
+
+df2 <- data.frame(x = 0, y = 0)
+angle <- -49.5 * pi/180
+step_f3 <- jitter(1, amount = 0.01)
+step_f4 <- jitter(1, amount = 0.01)
+
+n_2<- round(runif(1, 70, 250))
+
+for(i in 1:n_2){
+  df2 <- df2 %>%
+    rbind(data.frame(x = (step_f3)^i * cos(angle * i),
+                     y = (step_f4)^i * sin(angle * i)))
+}
+
+df <- rbind(df,
+            df2)
+
+palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+col_palette <- mex.brewer(palette_name)
+
+df_sliced <- df %>%
+  slice_sample(prop = 0.25) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+ggplot() +
+  geom_segment(data = df,
+               aes(x, y, 
+                   xend = 0, yend = 0),
+               alpha = 0.25,
+               color = "white",
+               size = 0) + 
+  geom_point(data = df,
+             aes(x, 
+                 y),
+             color = "white",
+             size = 0.75) + 
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "white") + 
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) + 
+  scale_color_manual(values = sample(col_palette, 3)) +
+  scale_size(range = c(1, 5)) +
+  coord_equal() + 
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(color = NA, 
+                                       fill = "black"))
+```
+
+## Example 2
+
+This is another example. The turtle takes a step of size 0.9 * i and direction angle * i _and then return to the origin_ before taking another step:
+```{r}
+df <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- 144.3 * pi/180
+
+for(i in 1:150){
+  df <- df %>%
+    # Multiply the angle by 1.0 to get a star that shrinks
+    rbind(data.frame(x = (0.95 * i) * cos(1.01 * angle * i),
+                     y = (0.95 * i) * sin(1.01 * angle * i)))
+}
+
+# Notice the difference with this; the turtle does _not_return to the origin:
+# for(i in 1:50){
+#   df <- df %>%
+#     rbind(df %>%
+#             slice_tail() %>%
+#             mutate(x = x + 0.9 * cos(angle * i),
+#                    y = y + 0.9 * sin(angle * i)))
+# }
+```
+
+Plot the path:
+```{r}
+ggplot() +
+  geom_path(data = df,
+            aes(x, y)) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Plot with segments:
+```{r}
+seed <- sample.int(100000, 1)
+set.seed(seed)
+palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Tierra"), 1)
+col_palette <- mex.brewer(palette_name)
+
+df_sliced <- df %>%
+  slice_sample(prop = 0.75) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+ggplot() +
+  geom_segment(data = df,
+               aes(x, y, xend = 0, yend = 0)) + 
+  geom_point(data = df,
+             aes(x, y),
+             size = 0.75) +
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "black") + 
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) + 
+  scale_color_manual(values = sample(col_palette, 3)) +
+  scale_size(range = c(1, 5)) +
+  coord_equal() + 
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(fill = "white"))
+```
+
+Plot with polygons:
+```{r}
+ggplot() +
+  geom_polygon(data = df,
+               aes(x, y)) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Pack it all:
+```{r}
+seed <- sample.int(100000, 1)
+set.seed(seed)
+
+df <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- 144.3 * pi/180
+
+step_f <- jitter(0.95, 0.9)
+angle_f <- jitter(0.95, 0.9)
+
+for(i in 1:150){
+  df <- df %>%
+    # Multiply the angle by 1.0 to get a star that shrinks
+    rbind(data.frame(x = (step_f * i) * cos(angle_f * angle * i),
+                     y = (step_f * i) * sin(angle_f * angle * i)))
+}
+
+palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+col_palette <- mex.brewer(palette_name)
+
+df_sliced <- df %>%
+  slice_sample(prop = 0.75) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+ggplot() +
+  geom_segment(data = df,
+               aes(x, y, 
+                   xend = 0, yend = 0),
+               alpha = 0.25,
+               color = "black",
+               size = 0) + 
+  geom_point(data = df,
+             aes(x, y),
+             size = 0.75) +
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "black") + 
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) + 
+  scale_color_manual(values = sample(col_palette, 3)) +
+  scale_size(range = c(1, 5)) +
+  coord_equal() + 
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(fill = "white"))
+```
+
+Notice the difference when the turtle does not return to the origin:
+```{r}
+df <- data.frame(x = 0, y = 0)
+#angle <- -89.5 * pi/180
+angle <- 89 * pi/180
+
+for(i in 1:25){
+  df <- df %>%
+    rbind(df %>%
+            slice_tail() %>%
+            mutate(x = x + 0.9 * cos(angle * i),
+                   y = y + 0.9 * sin(angle * i)))
+}
+```
+
+Plot the path:
+```{r}
+ggplot() +
+  geom_path(data = df,
+            aes(x, y)) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Plot with diagonals:
+```{r}
+#seed <- sample.int(100000, 1)
+set.seed(NULL)
+palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Tierra"), 1)
+col_palette <- mex.brewer(palette_name)
+col_fill <- sample(col_palette, 1)
+x0 <- jitter(mean(df$x), 0.9)
+y0 <- jitter(mean(df$y), 0.9)  
+rad <- runif(1, 0.15, 0.65)
+
+ggplot() +
+  # geom_diagonal(data = df,
+  #           aes(x, y, xend = 0, yend = 0),
+  #           color = col_fill,
+  #           size = 1) + 
+  geom_circle(aes(x0 = x0, y0 = y0,
+                  r = rad,
+                  fill = col_fill),
+              color = NA) + 
+  geom_diagonal(data = df,
+                aes(x, y, xend = 0, yend = 0),
+                color = "white",
+                size = 1) +
+  coord_equal(xlim = c(x0 - rad, 
+                       x0 + rad), 
+              ylim = c(y0 - rad, 
+                       y0 + rad)) + 
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(fill = "white"))
+```
+
+Put all together; this is very similar to Ijeamaka Anyene's minimal radial patterns (https://github.com/Ijeamakaanyene/patterns):
+```{r}
+seed <- sample.int(100000, 1)
+set.seed(seed)
+
+# Initialize radius of circle
+rad <- runif(1, 0.15, 0.90)
+
+# Initialize the data frame
+df <- data.frame(x = 0, y = 0)
+
+# Initialize the angle; this parameter is important, if it coincides with some values it creates closed polygons
+#angle <- -89.5 * pi/180
+angle <- runif(1, 0, 180) * pi/180
+
+for(i in 1:sample.int(50, 1)){
+  df <- df %>%
+    rbind(df %>%
+            slice_tail() %>%
+            mutate(x = x + rad * cos(angle * i),
+                   y = y + rad * sin(angle * i)))
+}
+
+# Select palette at random
+palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Tierra"), 1)
+col_palette <- mex.brewer(palette_name)
+
+# Select a color from the palette
+col_fill <- sample(col_palette, 2)
+
+# Jitter coordinates of circle
+x0 <- jitter(mean(df$x), 0.9)
+y0 <- jitter(mean(df$y), 0.9)  
+
+
+# Strength of diagonal
+s <- runif(1, 0.25, 0.75)
+
+# Plot
+ggplot() +
+  geom_circle(aes(x0 = mean(df$x), y0 = mean(df$y),
+                  r = rad/runif(1, 3/4, 5/4)),
+              fill = col_fill[1],
+              color = NA) + 
+  geom_diagonal(data = df,
+                aes(x, y, 
+                    xend = 0, yend = 0,
+                    size = stat(index),
+                    alpha = stat(index)),
+                color = col_fill[2],
+                size = 1,
+                strength = s) +
+  coord_equal(xlim = c(mean(df$x) - rad, 
+                       mean(df$x) + rad), 
+              ylim = c(mean(df$y) - rad, 
+                       mean(df$y)+ rad)) + 
+  theme_void() + 
+  theme(legend.position = "none",
+        plot.background = element_rect(color = NA,
+                                       fill = col_fill[2]))
+```
+
+
+## Example 3
+
+This is example is a little bit more involved. The turtle takes a step of length d with direction angle = 90 degrees; it does not return to the origin, but from its current position it takes another step of length d with an angle of 90 + previous angle. After four such steps, it has walked in a square; the length and angle of the next step will change, and then the turtle walks in a square again:
+```{r}
+df <- data.frame(x = 0, y = 0)
+
+# Initialize the size of the step
+d <- 50
+# Initialize the angle the turtle is facing
+angle <- pi/2
+
+for(i in 1:320){
+  df <- df %>%
+    rbind(df %>%
+            # Take the last row in the data frame
+            slice_tail() %>%
+            # Starting from the last position, move a distance d with the designated angle 
+            mutate(x = x + d * cos(angle),
+                   y = y + d * sin(angle)))
+  # Do four right turns (pi/2) and then the next angle will be instead of a right turn an angle of 75 degrees
+  angle <- ifelse(i %% 4 == 0,
+                  angle + 75 * pi/180,
+                  angle + pi/2)
+  # Do four steps of length d, and then the next step will be of length 0.95 * d
+  d <- ifelse(i %% 4 == 0,
+              0.95 * d,
+              d)
+}
+```
+
+Plot the path:
+```{r}
+ggplot() +
+  geom_path(data = df,
+            aes(x, y)) + 
+  coord_equal() + 
+  theme_void()
+```
+
+Plot with polygons:
+```{r}
+ggplot() +
+  geom_polygon(data = df,
+               aes(x, y)) + 
+  geom_path(data = df,
+            aes(x, y),
+            color="black") + 
+  coord_equal() + 
+  theme_void()
+```
+
+A variation is as follows: the turtle does not return to the origin, but at each step the length of the step is compounded/discounted (depending on whether >1 or <1), and the angle transitions proportionally to the step:
+```{r}
+df <- data.frame(x = 0, y = 0)
+for(i in 1:320){df <- df %>%
+  rbind(df %>%
+          slice_tail() %>%
+          mutate(x = x + (0.9545)^i * cos(1.35 * i),
+                 y=y + (0.95)^i * sin(1.35 * i)))}
+
+ggplot()+
+  geom_polygon(data = df,
+               aes(x,
+                   y)) + 
+  coord_equal() +
+  theme_void()
+```
+
+Smaller angles result in more steps around, i.e., polygons with more sides.
+
+Try with multiple data frames:
+```{r}
+df <- data.frame(x = 0, y = 0)
+
+# Initialize the size of the step
+#d <- 50
+# Initialize the angle the turtle is facing
+#angle <- pi/2
+
+for(i in 1:320){
+  df <- df %>%
+    rbind(df %>%
+            # Take the last row in the data frame
+            slice_tail() %>%
+            # Starting from the last position, move a distance d with the designated angle 
+            mutate(x = x + (0.95)^i * cos(1.55 * i),
+                   y = y + (0.95)^i * sin(1.55 * i)))
+}
+```
+
+```{r}
+df2 <- data.frame(x = 0, y = 0)
+
+# Initialize the size of the step
+#d <- 50
+# Initialize the angle the turtle is facing
+#angle <- pi/2
+
+for(i in 1:60){
+  df2 <- df2 %>%
+    rbind(df2 %>%
+            # Take the last row in the data frame
+            slice_tail() %>%
+            # Starting from the last position, move a distance d with the designated angle 
+            mutate(x = x + (0.9475)^i * cos(1.55 * i),
+                   y = y + (0.9475)^i * sin(1.55 * i)))
+}
+```
+
+```{r}
+df3 <- data.frame(x = 0, y = 0)
+
+# Initialize the size of the step
+#d <- 50
+# Initialize the angle the turtle is facing
+#angle <- pi/2
+
+for(i in 1:30){
+  df3 <- df3 %>%
+    rbind(df3 %>%
+            # Take the last row in the data frame
+            slice_tail() %>%
+            # Starting from the last position, move a distance d with the designated angle 
+            mutate(x = x + (0.945)^i * cos(1.55 * i),
+                   y = y + (0.945)^i * sin(1.55 * i)))
+}
+```
+
+Put all paths together
+```{r}
+df <- rbind(df %>%
+              mutate(path = "1"),
+            df2 %>%
+              mutate(path = "2"),
+            df3 %>%
+              mutate(path = "3"))
+```
+
+Plot the paths:
+```{r}
+ggplot() +
+  geom_path(data = df,
+            aes(x, 
+                y,
+                color = path)) + 
+  scale_color_manual(values = c("1" = "gray80", "2" = "gray40", "3" = "black")) +
+  coord_equal(expand = FALSE) + 
+  theme_void() +
+  theme(legend.position = "none")
+```
+
+Plot with polygons:
+```{r}
+ggplot() +
+  geom_polygon(data = df,
+               aes(x, y)) + 
+  # geom_path(data = df2,
+  #           aes(x, y),
+  #           color="white",
+  #           size = 0.25) + 
+  coord_equal() + 
+  theme_void()
+```
+
+## And an extra with hilbert numbers
+
+Also see this: https://fronkonstin.com/2016/02/01/going-bananas-with-hilbert/
+
+Define a function for Hilbert:
+```{r}
+hilbert <- function(m, n, r){
+  for (i in 1:n){
+    tmp <- cbind(t(m), m+nrow(m)^2)
+    m <- rbind(tmp, (2*nrow(m))^r-tmp[nrow(m):1,]+1)
+  }
+  m %>% 
+    data.frame() %>%
+    mutate(row = 1:n()) %>%
+    pivot_longer(cols = starts_with("X"), 
+                 names_to = "y",
+                 names_prefix = "X",
+                 names_transform = list(y = as.integer),
+                 values_to = "order") %>% 
+    rename(x = row) %>%
+    arrange(order)
+}
+```
+
+
+```{r}
+hilbert(m = matrix(1), n = 1, r = 2)
+```
+
+```{r}
+ggplot() + 
+  geom_path(data = hilbert(m = matrix(1), 
+                           n = 5, 
+                           r = 2), 
+            aes(x, y)) + 
+  coord_equal()
+```
+
+```{r}
+ggplot() + 
+  geom_path(data = hilbert(m = matrix(-1), 
+                           n = 5, 
+                           r = 2), 
+            aes(x, y),
+            color = "red",
+            size = 1) +
+  geom_polygon(data = hilbert(m = matrix(1), 
+                              n = 5, 
+                              r = 2), 
+               aes(x, y)) + 
+  coord_equal()
+```
+
+```{r}
+hilbert2(matrix(1), n = 1, r = 2)
+```
+
+```{r}
+h3 <- data.frame(geometry = hilbert(m = matrix(tan(1)), 
+                                    n = 4, 
+                                    r = 2)[,1:2] %>%
+                   as.matrix() %>%
+                   st_linestring() %>% 
+                   st_geometry()) %>%
+  st_sf()
+
+ggplot() +
+  geom_sf(data = h3 %>%
+            st_buffer(dist = 0.35),
+          fill = "blue") +
+  geom_sf(data = h3 %>%
+            st_buffer(dist = 0.175),
+          fill = "red") +
+  geom_sf(data = h3,
+          color = "white",
+          size = 0.35) +
+  theme_void()
+```
+
+```{r}
+h3 <- data.frame(geometry = hilbert(m = matrix(1), 
+                                    n = 4, 
+                                    r = 2)[,1:2] %>%
+                   as.matrix() %>%
+                   st_linestring() %>% 
+                   st_geometry()) %>%
+  st_sf()
+
+ggplot() +
+  geom_sf(data = h3 %>%
+            st_buffer(dist = 0.35),
+          fill = "blue") +
+  geom_sf(data = h3 %>%
+            st_buffer(dist = 0.175),
+          fill = "red") +
+  geom_sf(data = h3,
+          color = "white",
+          size = 0.35) +
+  theme_void()
+```
+
+
+```{r}
+h3 <- data.frame(geometry = hilbert(m = matrix(3), 
+                                    n = 4, 
+                                    r = 2)[,1:2] %>%
+                   as.matrix() %>%
+                   st_linestring() %>% 
+                   st_geometry()) %>%
+  st_sf()
+
+ggplot() +
+  geom_sf(data = h3 %>%
+            st_buffer(dist = 0.35),
+          fill = "blue") +
+  geom_sf(data = h3 %>%
+            st_buffer(dist = 0.175),
+          fill = "red") +
+  geom_sf(data = h3,
+          color = "white",
+          size = 0.35) +
+  theme_void()
+```
+
