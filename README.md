@@ -43,6 +43,6 @@ Harmonographs
 
 ![](04-minimal-radial-diagonal-turtle-walks/minimal-radial-walk-Revolucion-23694.png)
 
-## Radial turthel walks with paths
+## Radial turtle walks with paths
 
 ![](05-minimal-radial-path-turtle-walks/minimal-radial-walk-paths-Atentado-4354.png)
