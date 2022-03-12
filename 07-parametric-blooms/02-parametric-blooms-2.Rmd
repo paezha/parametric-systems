@@ -1,0 +1,94 @@
+---
+title: "R Notebook"
+output: html_document
+---
+
+This notebook has a parametric system that produces bloom-like plots.
+
+Load packages:
+```{r}
+library(glue)
+library(MetBrewer)
+library(MexBrewer)
+library(tidyverse)
+```
+
+The original code I lifted from Antonio Sánchez Chinchón (see here: https://twitter.com/aschinchon/status/1499138667616604168). I modified it to introduce some randomness and colors from {MexBrewer} and {MetBrewer}:
+```{r}
+rebirths_2 <- function(dir = "."){
+  start_time <- Sys.time()
+  
+  # Set a seed
+  seed <- sample.int(10000, 1)
+  set.seed(seed)
+  
+  # Select a color palette at random
+  palette_name <- sample(c("metbrewer", "mexbrewer"), 1)
+  if(palette_name == "mexbrewer"){
+    palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)
+    col_palette <- mex.brewer(palette_name)
+  }else{
+    palette_name <- sample(c("Cassatt1", "Greek", "Hokusai2", "Hokusai3", "OKeeffe2", "Peru2", "Robert", "VanGogh3"), 1)
+    col_palette <- met.brewer(palette_name)
+  }
+  
+  # This will distribute some of the randomness to x and y
+  tot_rand_1 <- runif(1, 0, 3)
+  tot_rand_2 <- runif(1, 0, 3)
+
+  # Generate the system
+  df <- seq(-3, 3, by = 0.01) %>%
+    expand.grid(x = ., y = .) %>%
+    mutate(ex = runif(n(), -0.25, 0.25),
+           ey = runif(n()), -0.25, 0.25,
+           # x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 2.5) - sample(c(-1, 1), 1)* runif(n(), 0.0, 2.5) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+           # y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 4 - 2.5) - sample(c(-1, 1), 1)* runif(n(), 0.0, 4 - 2.5) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey),
+           x = (sample(c(-1, 1), 1) * runif(n(), 0.0, tot_rand_1) - sample(c(-1, 1), 1)* runif(n(), 0.0, tot_rand_2) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+           y = (sample(c(-1, 1), 1) * runif(n(), 0.0, 4 - tot_rand_1) - sample(c(-1, 1), 1)* runif(n(), 0.0, 4 - tot_rand_2) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) 
+  
+  # Plot
+  p <- ggplot() +
+    geom_path(data = df,
+              aes(x = x, y = y,
+                  color = x * y),
+              alpha = 0.05, 
+              size = 0.1) +
+    # geom_point(data = df %>%
+    #              slice_sample(prop = 0.25),
+    #            aes(x = x, y = y,
+    #               color = -x * y),
+    #           alpha = 0.25, 
+    #           size = 1,
+    #           shape = 18) +
+    scale_color_gradientn(colors = col_palette) +
+    coord_polar(start = runif(1, 0, 2 * pi),
+                direction = sample(c(-1, 1), 1)) +
+    theme_void() +
+    theme(legend.position = "none",
+          panel.background = element_rect(color = NA,
+                                          fill = sample(col_palette, 1)),
+          plot.background = element_rect(color = NA,
+                                         fill = sample(col_palette, 1)))
+  
+  # Save
+  ggsave(glue("{dir}/par-system-2-path-{palette_name}-{seed}.png"),
+         plot = p,
+         height = 7,
+         width = 7,
+         units = "in")
+  
+  # Time process
+  end_time <- Sys.time()
+  end_time - start_time
+}
+
+```
+
+Loop the function l times:
+```{r}
+l <- 100
+for(i in 1:l){
+  rebirths_2("test")
+}
+```
+

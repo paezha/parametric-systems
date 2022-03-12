@@ -1,0 +1,377 @@
+---
+title: "R Notebook"
+output: html_document
+---
+
+For information on turtle walks, see here: https://fronkonstin.com/2014/07/07/four-simple-turtle-graphs-to-play-with-kids/.
+
+If needed install package ({MexBrewer})[https://paezha.github.io/MexBrewer/]:
+```{r}
+if (!require("MexBrewer")) remotes::install_github("paezha/MexBrewer") 
+```
+
+Load packages:
+```{r}
+library(ggforce)
+library(glue)
+library(MexBrewer)
+library(MetBrewer)
+library(patchwork)
+library(tidyverse)
+```
+
+Twin turtle spirals Panel 1:
+```{r}
+# Set random seed
+seed_1 <- sample.int(10000, 1)
+set.seed(seed_1)
+
+## First turtle walk
+# Initialize data frame
+df <- data.frame(x = 0, y = 0)
+
+# Randomize the inital angle to begin walk
+angle <- runif(1, -2 * pi, 0)
+
+# Randomize the parameters that control the length of the step: these parameters are _very_ important because the compounding means the overall effect can be very dramatic (explosive growth or precipitous discount)
+step_f1 <- jitter(1, amount = 0.015)
+step_f2 <- jitter(1, amount = 0.030)
+
+# Randomize the total number of steps in the walk of the first turtle
+n_1 <- round(runif(1, 70, 200))
+
+# Execute walk: the length of the steps is compounded or discounted
+for(i in 1:n_1){
+  df <- df %>%
+    rbind(data.frame(x = (step_f1)^i * cos(angle * i),
+                     y = (step_f2)^i * sin(angle * i)))
+}
+
+## Second turtle walk
+# Initialize data frame
+df2 <- data.frame(x = 0, y = 0)
+
+# Randomize the inital angle to begin walk
+angle <- runif(1, -2 * pi, 0)
+
+# Randomize the parameters that control the length of the step
+step_f3 <- jitter(1, amount = 0.015)
+step_f4 <- jitter(1, amount = 0.030)
+
+# Randomize the total number of steps in the walk of the second turtle
+n_2<- round(runif(1, 70, 250))
+
+# Execute walk
+for(i in 1:n_2){
+  df2 <- df2 %>%
+    rbind(data.frame(x = (step_f3)^i * cos(angle * i),
+                     y = (step_f4)^i * sin(angle * i)))
+}
+
+# Bind walks
+df <- rbind(df,
+            df2)
+
+# Randomly select a color palette (MexBrewer Edition)
+#palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+#col_palette <- mex.brewer(palette_name)
+
+# Randomly select a color palette (MetBrewer Edition)
+palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
+col_palette <- met.brewer(palette_name)
+
+# Sample to add points at the end
+df_sliced <- df %>%
+  slice_sample(prop = 0.25) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+# Plot 1
+panel_1 <- ggplot() +
+  # All segments converge to coordinate (0,0)
+  geom_segment(data = df,
+               aes(x, y, 
+                   xend = 0, yend = 0),
+               alpha = 0.25,
+               color = "white",
+               size = 0.1) + 
+  # All points get a small circle
+  geom_point(data = df,
+             aes(x, 
+                 y),
+             color = "white",
+             size = 0.75) + 
+  # Sampled points get a bigger circle
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "white") + 
+  # Bigger circles get some color
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) +
+  # Set color scale
+  scale_color_manual(values = sample(col_palette, 3)) +
+  # Set size range
+  scale_size(range = c(1, 5)) +
+  # Set coordinates to equal
+  #coord_equal() + 
+  # Theme parameters
+  theme_void() + 
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA, 
+                                        fill = "black"),
+        plot.background = element_rect(color = NA, 
+                                       fill = "white"),
+        plot.margin = margin(0.25, 0.125, 0.25, 0.25, "cm"))
+
+dx <- max(df$x) - min(df$x)
+dy <- max(df$y) - min(df$y)
+```
+
+Twin turtle spirals Panel 2:
+```{r}
+# Set random seed
+seed_2 <- sample.int(10000, 1)
+set.seed(seed_2)
+
+## First turtle walk
+# Initialize data frame
+df <- data.frame(x = 0, y = 0)
+
+# Randomize the inital angle to begin walk
+angle <- runif(1, -2 * pi, 0)
+
+# Randomize the parameters that control the length of the step: these parameters are _very_ important because the compounding means the overall effect can be very dramatic (explosive growth or precipitous discount)
+step_f1 <- jitter(1, amount = 0.015)
+step_f2 <- jitter(1, amount = 0.030)
+
+# Randomize the total number of steps in the walk of the first turtle
+n_1 <- round(runif(1, 70, 200))
+
+# Execute walk: the length of the steps is compounded or discounted
+for(i in 1:n_1){
+  df <- df %>%
+    rbind(data.frame(x = (step_f1)^i * cos(angle * i),
+                     y = (step_f2)^i * sin(angle * i)))
+}
+
+## Second turtle walk
+# Initialize data frame
+df2 <- data.frame(x = 0, y = 0)
+
+# Randomize the inital angle to begin walk
+angle <- runif(1, -2 * pi, 0)
+
+# Randomize the parameters that control the length of the step
+step_f3 <- jitter(1, amount = 0.015)
+step_f4 <- jitter(1, amount = 0.030)
+
+# Randomize the total number of steps in the walk of the second turtle
+n_2<- round(runif(1, 70, 250))
+
+# Execute walk
+for(i in 1:n_2){
+  df2 <- df2 %>%
+    rbind(data.frame(x = (step_f3)^i * cos(angle * i),
+                     y = (step_f4)^i * sin(angle * i)))
+}
+
+# Bind walks
+df <- rbind(df,
+            df2)
+
+# Randomly select a color palette (MexBrewer Edition)
+#palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+#col_palette <- mex.brewer(palette_name)
+
+# Randomly select a color palette (MetBrewer Edition)
+palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
+col_palette <- met.brewer(palette_name)
+
+# Sample to add points at the end
+df_sliced <- df %>%
+  slice_sample(prop = 0.25) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+# Plot 2
+panel_2 <- ggplot() +
+  # All segments converge to coordinate (0,0)
+  geom_segment(data = df,
+               aes(x, y, 
+                   xend = 0, yend = 0),
+               alpha = 0.25,
+               color = "white",
+               size = 0.1) + 
+  # All points get a small circle
+  geom_point(data = df,
+             aes(x, 
+                 y),
+             color = "white",
+             size = 0.75) + 
+  # Sampled points get a bigger circle
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "white") + 
+  # Bigger circles get some color
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) +
+  # Set color scale
+  scale_color_manual(values = sample(col_palette, 3)) +
+  # Set size range
+  scale_size(range = c(1, 5)) +
+  # Set coordinates to equal
+  #coord_equal() + 
+  # Theme parameters
+  theme_void() + 
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA, 
+                                        fill = "black"),
+        plot.background = element_rect(color = NA, 
+                                       fill = "white"),
+        plot.margin = margin(0.25, 0.0, 0.25, 0.125, "cm"))
+
+dx <- dx + max(df$x) - min(df$x)
+dy <- max(dy, max(df$y) - min(df$y))
+```
+
+Twin turtle spirals Panel 3:
+```{r}
+# Set random seed
+seed_3 <- sample.int(100000, 1)
+set.seed(seed_3)
+
+## First turtle walk
+# Initialize data frame
+df <- data.frame(x = 0, y = 0)
+
+# Randomize the inital angle to begin walk
+angle <- runif(1, -2 * pi, 0)
+
+# Randomize the parameters that control the length of the step: these parameters are _very_ important because the compounding means the overall effect can be very dramatic (explosive growth or precipitous discount)
+step_f1 <- jitter(1, amount = 0.015)
+step_f2 <- jitter(1, amount = 0.030)
+
+# Randomize the total number of steps in the walk of the first turtle
+n_1 <- round(runif(1, 70, 200))
+
+# Execute walk: the length of the steps is compounded or discounted
+for(i in 1:n_1){
+  df <- df %>%
+    rbind(data.frame(x = (step_f1)^i * cos(angle * i),
+                     y = (step_f2)^i * sin(angle * i)))
+}
+
+## Second turtle walk
+# Initialize data frame
+df2 <- data.frame(x = 0, y = 0)
+
+# Randomize the inital angle to begin walk
+angle <- runif(1, -2 * pi, 0)
+
+# Randomize the parameters that control the length of the step
+step_f3 <- jitter(1, amount = 0.015)
+step_f4 <- jitter(1, amount = 0.030)
+
+# Randomize the total number of steps in the walk of the second turtle
+n_2<- round(runif(1, 70, 250))
+
+# Execute walk
+for(i in 1:n_2){
+  df2 <- df2 %>%
+    rbind(data.frame(x = (step_f3)^i * cos(angle * i),
+                     y = (step_f4)^i * sin(angle * i)))
+}
+
+# Bind walks
+df <- rbind(df,
+            df2)
+
+# Randomly select a color palette (MexBrewer Edition)
+#palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+#col_palette <- mex.brewer(palette_name)
+
+# Randomly select a color palette (MetBrewer Edition)
+palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
+col_palette <- met.brewer(palette_name)
+
+# Sample to add points at the end
+df_sliced <- df %>%
+  slice_sample(prop = 0.25) %>%
+  mutate(size = runif(n(), 0, 10),
+         color = factor(sample.int(3, n(), replace = TRUE)))
+
+# Plot 3
+panel_3 <- 
+  ggplot() +
+  # All segments converge to coordinate (0,0)
+  geom_segment(data = df,
+               aes(x, y, 
+                   xend = 0, yend = 0),
+               alpha = 0.25,
+               color = "white",
+               size = 0.1) + 
+  # All points get a small circle
+  geom_point(data = df,
+             aes(x, 
+                 y),
+             color = "white",
+             size = 0.75) + 
+  # Sampled points get a bigger circle
+  geom_point(data = df_sliced,
+             aes(x, 
+                 y,
+                 size = size),
+             color = "white") + 
+  # Bigger circles get some color
+  geom_point(data = df_sliced %>%
+               mutate(size = 0.45 * size),
+             aes(x, 
+                 y,
+                 size = size,
+                 color = color)) +
+  # Set color scale
+  scale_color_manual(values = sample(col_palette, 3)) +
+  # Set size range
+  scale_size(range = c(1, 5)) +
+  # Set coordinates to equal
+  #coord_equal() + 
+  # Theme parameters
+  theme_void() + 
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA, 
+                                        fill = "black"),
+        plot.background = element_rect(color = NA, 
+                                       fill = "white"),
+        plot.margin = margin(0.25, 0.25, 0.25, 0.125, "in"))
+
+dx <- dx + max(df$x) - min(df$x)
+dy <- max(dy, max(df$y) - min(df$y))
+```
+
+Plot panels:
+```{r}
+panel_1 + panel_2 + panel_3
+```
+
+```{r}
+if(dx > dy){
+  ggsave(glue("twin-spiral-panel-{seed_1}-{seed_2}-{seed_3}.png"),
+         width = 7)
+}else{
+  ggsave(glue("twin-spiral-panel-{seed_1}-{seed_2}-{seed_3}.png"),
+         height = 7)
+}
+```
+

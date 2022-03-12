@@ -8,6 +8,7 @@ This notebook has some experiments with parametric systems.
 Load packages:
 ```{r}
 library(glue)
+library(MetBrewer)
 library(MexBrewer)
 library(tidyverse)
 ```
@@ -47,8 +48,8 @@ seq(-3, 3, by = 0.01) %>%
   expand.grid(x = ., y = .) %>%
   mutate(ex = runif(n(), -0.25, 0.25),
          ey = runif(n()), -0.25, 0.25,
-         x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
-         y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
+         x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 2.5) - sample(c(-1, 1), 1)* runif(n(), 0.0, 2.5) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+         y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 2.5) - sample(c(-1, 1), 1)* runif(n(), 0.0, 2.5) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
   ggplot(aes(x = x, y = y)) +
   geom_point(aes(color = x * y),
              alpha = 0.05, 
@@ -56,7 +57,7 @@ seq(-3, 3, by = 0.01) %>%
              size = 0) +
   scale_color_gradientn(colors = col_palette) +
   coord_polar(start = runif(1, 0, 2 * pi),
-                       direction = sample(c(-1, 1), 1)) +
+              direction = sample(c(-1, 1), 1)) +
   theme_void() +
   theme(legend.position = "none",
         panel.background = element_rect(color = NA,
@@ -65,10 +66,10 @@ seq(-3, 3, by = 0.01) %>%
                                        fill = "black"))
 
 # Save
-ggsave(glue("par-system-{seed}-{palette_name}.png"),
-       height = 7,
-       width = 7,
-       units = "in")
+#ggsave(glue("par-system-{seed}-{palette_name}.png"),
+#       height = 7,
+#       width = 7,
+#       units = "in")
 ```
 
 
@@ -78,7 +79,7 @@ seed <- sample.int(10000, 1)
 set.seed(seed)
 
 # Select a color palette at random
-palette_name <- sample(c("Alacena", "Atentado", "Revolucion", "Ronda"), 1)
+palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)#sample(c("Alacena", "Atentado", "Revolucion", "Ronda"), 1)
 col_palette <- mex.brewer(palette_name)
 
 # Generate the system and plot
@@ -90,11 +91,11 @@ seq(-3, 3, by = 0.01) %>%
          y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
   ggplot(aes(x = x, y = y)) +
   geom_path(aes(color = x * y),
-             alpha = 0.05, 
-             size = 0) +
+            alpha = 0.05, 
+            size = 0) +
   scale_color_gradientn(colors = col_palette) +
   coord_polar(start = runif(1, 0, 2 * pi),
-                       direction = sample(c(-1, 1), 1)) +
+              direction = sample(c(-1, 1), 1)) +
   theme_void() +
   theme(legend.position = "none",
         panel.background = element_rect(color = NA,
@@ -108,4 +109,120 @@ ggsave(glue("par-system-path-{seed}-{palette_name}.png"),
        width = 7,
        units = "in")
 ```
+
+Variation with sequential palettes:
+```{r}
+# Set a seed
+seed <- sample.int(10000, 1)
+set.seed(seed)
+
+# Select a color palette at random
+palette_name <- sample(c("metbrewer", "mexbrewer"), 1)
+if(palette_name == "mexbrewer"){
+  palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)
+  col_palette <- mex.brewer(palette_name)
+  }else{
+  palette_name <- sample(c("Cassatt1", "Greek", "Hokusai2", "Hokusai3", "OKeeffe2", "Peru2", "Robert", "VanGogh3"), 1)
+  col_palette <- met.brewer(palette_name)
+  }
+
+# Generate the system and plot
+seq(-3, 3, by = 0.01) %>%
+  expand.grid(x = ., y = .) %>%
+  mutate(ex = runif(n(), -0.25, 0.25),
+         ey = runif(n()), -0.25, 0.25,
+         x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+         y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_path(aes(color = x * y),
+            alpha = 0.05, 
+            size = 0.1) +
+  scale_color_gradientn(colors = col_palette) +
+  coord_polar(start = runif(1, 0, 2 * pi),
+              direction = sample(c(-1, 1), 1)) +
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                        fill = sample(col_palette, 1)),
+        plot.background = element_rect(color = NA,
+                                       fill = sample(col_palette, 1)))
+
+# Save
+ggsave(glue("par-system-path-{seed}-{palette_name}.png"),
+       height = 7,
+       width = 7,
+       units = "in")
+```
+
+Here is a different system:
+```{r}
+df <- #data.frame(t = seq(pi/32, 2 * pi/32, 0.00005)) %>%
+  data.frame(t = seq(0, pi, 0.00005)) %>%
+  # The first coefficient controls how tightly packed the blobs are; the next two coefficients control ow spread they are horizontally and vertically
+  mutate(z = 0.5 * (1i * sin(t * pi) + 1 * cos(t * pi)) 
+         # The first coefficient controls the shape of the blobs
+         - 0.5 * sin(5 * pi * 0.607) * exp(-1i * 4 * pi * t)
+         #- 0.5 * exp(1i * 6 * pi * (t + 0.7))
+         #+ 0.1 * exp(1i * 1200 * pi * t) * sin((2.5 * pi * t + pi * 0.607))^10#80 this exponent controls how much overlap there is between lines of the smaller elements of the plot
+         # First coeff is
+         + 0.4 * exp(1i * 1200 * pi * t) * sin((2.5 * pi * t + pi * 0.107))^10#80 this exponent controls how much overlap there is between lines of the bigger elements of the plot: bigger numbers more overlap - less density
+         ) %>%
+  mutate(x = Re(z),
+         y = Im(z))
+```
+
+```{r}
+# Select a color palette at random
+palette_name <- sample(c("metbrewer", "mexbrewer"), 1)
+if(palette_name == "mexbrewer"){
+  palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)
+  col_palette <- mex.brewer(palette_name)
+  }else{
+  palette_name <- sample(c("Cassatt1", "Greek", "Hokusai2", "Hokusai3", "OKeeffe2", "Peru2", "Robert", "VanGogh3"), 1)
+  col_palette <- met.brewer(palette_name)
+  }
+
+a1 <- runif(1, 0.25, 1.25)
+a2 <- runif(1, 0.25, 1.25)
+a3 <- runif(1, 0.25, 1.25)
+
+xp <- sample.int(100, 1)
+
+#df <- #data.frame(t = seq(pi/32, 2 * pi/32, 0.00005)) %>%
+  data.frame(t = seq(0, pi, 0.00005)) %>%
+  # The first coefficient controls how tightly packed the blobs are; the next two coefficients control ow spread they are horizontally and vertically
+  mutate(z = a1 * (1i * sin(t * pi) + 1 * cos(t * pi)) 
+         # The first coefficient controls the shape of the blobs
+         - a2 * sin(5 * pi * 0.607) * exp(-1i * 4 * pi * t)
+         #- 0.5 * exp(1i * 6 * pi * (t + 0.7))
+         #+ 0.1 * exp(1i * 1200 * pi * t) * sin((2.5 * pi * t + pi * 0.607))^10#80 this exponent controls how much overlap there is between lines of the smaller elements of the plot
+         # First coeff is
+         + a3 * exp(1i * 1200 * pi * t) * sin((2.5 * pi * t + pi * 0.107))^xp#80 this exponent controls how much overlap there is between lines of the bigger elements of the plot: bigger numbers more overlap - less density
+         ) %>%
+  mutate(x = Re(z),
+         y = Im(z)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_path(aes(color = x * y,
+            size = x * y),
+            alpha = 0.5) +
+  scale_color_gradientn(colors = col_palette) +
+  # coord_polar(start = runif(1, 0, 2 * pi),
+  #             direction = sample(c(-1, 1), 1)) +
+  scale_size(range = c(0.1, 0.75)) +
+  coord_equal() +
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                        fill = sample(col_palette, 1)),
+        plot.background = element_rect(color = NA,
+                                       fill = sample(col_palette, 1)))
+  
+# Save
+ggsave(glue("parametric-balls-{palette_name}-{seed}.png"),
+       height = 7,
+       width = 7,
+       units = "in")  
+```
+
+
 

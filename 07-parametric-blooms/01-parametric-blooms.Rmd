@@ -1,0 +1,59 @@
+---
+title: "R Notebook"
+output: html_document
+---
+
+This notebook has a parametric system that produces bloom-like plots.
+
+Load packages:
+```{r}
+library(glue)
+library(MetBrewer)
+library(MexBrewer)
+library(tidyverse)
+```
+
+The original code I lifted from Antonio Sánchez Chinchón (see here: https://twitter.com/aschinchon/status/1499138667616604168). I modified it to introduce some randomness and colors from {MexBrewer} and {MetBrewer}:
+```{r}
+# Set a seed
+seed <- sample.int(10000, 1)
+set.seed(seed)
+
+# Select a color palette at random
+palette_name <- sample(c("metbrewer", "mexbrewer"), 1)
+if(palette_name == "mexbrewer"){
+  palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)
+  col_palette <- mex.brewer(palette_name)
+  }else{
+  palette_name <- sample(c("Cassatt1", "Greek", "Hokusai2", "Hokusai3", "OKeeffe2", "Peru2", "Robert", "VanGogh3"), 1)
+  col_palette <- met.brewer(palette_name)
+  }
+
+# Generate the system and plot
+seq(-3, 3, by = 0.01) %>%
+  expand.grid(x = ., y = .) %>%
+  mutate(ex = runif(n(), -0.25, 0.25),
+         ey = runif(n()), -0.25, 0.25,
+         x = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * x - sample(c(-1, 1), 1) * sin(y^sample.int(4, 1)) + ex), 
+         y = (sample(c(-1, 1), 1) * runif(n(), 0.5, 1.5) - sample(c(-1, 1), 1) * y - sample(c(-1, 1), 1) * cos(x^sample.int(4, 1)) + ey)) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_path(aes(color = x * y),
+            alpha = 0.05, 
+            size = 0.1) +
+  scale_color_gradientn(colors = col_palette) +
+  coord_polar(start = runif(1, 0, 2 * pi),
+              direction = sample(c(-1, 1), 1)) +
+  theme_void() +
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                        fill = sample(col_palette, 1)),
+        plot.background = element_rect(color = NA,
+                                       fill = sample(col_palette, 1)))
+
+# Save
+ggsave(glue("par-system-path-{seed}-{palette_name}.png"),
+       height = 7,
+       width = 7,
+       units = "in")
+```
+
