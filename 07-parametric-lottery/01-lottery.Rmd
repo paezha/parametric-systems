@@ -15,7 +15,7 @@ library(tidyverse)
 
 The original code I lifted from Antonio Sánchez Chinchón (see here: https://twitter.com/aschinchon/status/1499138667616604168). I modified it to introduce some randomness and colors from {MexBrewer} and {MetBrewer}:
 ```{r}
-rebirths_2 <- function(dir = "."){
+lottery <- function(dir = "."){
   start_time <- Sys.time()
   
   # Set a seed
@@ -25,17 +25,19 @@ rebirths_2 <- function(dir = "."){
   # Select a color palette at random
   palette_name <- sample(c("metbrewer", "mexbrewer"), 1)
   if(palette_name == "mexbrewer"){
-    palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)
+    #palette_name <- sample(c("Aurora", "Concha", "Frida", "Tierra"), 1)
+    palette_name <- sample(c("Alacena", "Atentado", "Revolucion", "Ronda"), 1)
     col_palette <- mex.brewer(palette_name)
   }else{
-    palette_name <- sample(c("Cassatt1", "Greek", "Hokusai2", "Hokusai3", "OKeeffe2", "Peru2", "Robert", "VanGogh3"), 1)
+    #palette_name <- sample(c("Cassatt1", "Greek", "Hokusai2", "Hokusai3", "OKeeffe2", "Peru2", "Robert", "VanGogh3"), 1)
+    palette_name <- sample(c("Austria", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Hiroshige", "Hokusai1", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "Peru1", "Pillement", "Pissaro", "Redon", "Renoir", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", "Veronese", "Wissing"), 1)
     col_palette <- met.brewer(palette_name)
   }
   
   # This will distribute some of the randomness to x and y
   tot_rand_1 <- runif(1, 0, 3)
   tot_rand_2 <- runif(1, 0, 3)
-
+  
   # Generate the system
   df <- seq(-3, 3, by = 0.01) %>%
     expand.grid(x = ., y = .) %>%
@@ -71,7 +73,7 @@ rebirths_2 <- function(dir = "."){
                                          fill = sample(col_palette, 1)))
   
   # Save
-  ggsave(glue("{dir}/par-system-2-path-{palette_name}-{seed}.png"),
+  ggsave(glue("{dir}/lottery-{palette_name}-{seed}.png"),
          plot = p,
          height = 7,
          width = 7,
@@ -88,7 +90,7 @@ Loop the function l times:
 ```{r}
 l <- 100
 for(i in 1:l){
-  rebirths_2("test")
+  lottery("lottery-draws")
 }
 ```
 
