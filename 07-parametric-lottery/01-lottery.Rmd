@@ -15,12 +15,23 @@ library(tidyverse)
 
 The original code I lifted from Antonio Sánchez Chinchón (see here: https://twitter.com/aschinchon/status/1499138667616604168). I modified it to introduce some randomness and colors from {MexBrewer} and {MetBrewer}:
 ```{r}
-lottery <- function(dir = "."){
+lottery <- function(dir = ".", seed = NULL){
+  
+  #' Lottery draws
+  #'
+  #' @param dir an (optional) string with the name of the sub-directory to save the output image
+  #' @param seed an (optional) integer to use as a random seed
+  #' @return A .png image with the lottery draw; the image will be saved in dir and the name will be the name of the palette and the seed
+  
+  # Time the process
   start_time <- Sys.time()
   
-  # Set a seed
-  seed <- sample.int(10000, 1)
-  set.seed(seed)
+  # Set a seed if none is provided
+  if(is.null(seed)){
+    seed <- sample.int(1000000, 1)
+    set.seed(seed)
+  }
+  
   
   # Select a color palette at random
   palette_name <- sample(c("metbrewer", "mexbrewer"), 1)
@@ -55,13 +66,6 @@ lottery <- function(dir = "."){
                   color = x * y),
               alpha = 0.05, 
               size = 0.1) +
-    # geom_point(data = df %>%
-    #              slice_sample(prop = 0.25),
-    #            aes(x = x, y = y,
-    #               color = -x * y),
-    #           alpha = 0.25, 
-    #           size = 1,
-    #           shape = 18) +
     scale_color_gradientn(colors = col_palette) +
     coord_polar(start = runif(1, 0, 2 * pi),
                 direction = sample(c(-1, 1), 1)) +
@@ -79,11 +83,10 @@ lottery <- function(dir = "."){
          width = 7,
          units = "in")
   
-  # Time process
+  # Time the process
   end_time <- Sys.time()
   end_time - start_time
 }
-
 ```
 
 Loop the function l times:
@@ -92,5 +95,9 @@ l <- 100
 for(i in 1:l){
   lottery("lottery-draws")
 }
+```
+
+```{r}
+lottery(dir = "junk", seed = 34981234)
 ```
 

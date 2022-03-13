@@ -30,8 +30,9 @@ These are some examples of the outputs of these systems.
 
 ## Parametric systems
 
-![](01-parametric-systems/par-system-path-7929-Revolucion.png) \##
-Harmonographs
+![](01-parametric-systems/par-system-path-7929-Revolucion.png)
+
+## Harmonographs
 
 ![](02-harmonographs/harmonograph-Revolucion-213434.png)
 
