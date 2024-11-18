@@ -1,14 +1,9 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
 Check this [post](https://fronkonstin.com/2014/10/13/beautiful-curves-the-harmonograph/) for a discussion of harmonographs.
 
 Load packages:
 ```{r}
 library(glue)
-library(MexBrewer)
+library(MetBrewer)
 library(tidyverse)
 ```
 
@@ -19,8 +14,8 @@ seed <- sample.int(1000000, 1)
 set.seed(seed)
 
 # Color palette
-palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion","Ronda", "Tierra"), 1)
-col_palette <- mex.brewer(palette_name)
+palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
+col_palette <- met.brewer(palette_name)
 
 # Random parameters
 f1 <- sample(c(-1, 1), 1) * jitter(sample(c(2,3),1))
@@ -39,23 +34,23 @@ p3 <- runif(1,0,pi)
 p4 <- runif(1,0,pi)
 
 # Data frame and plot
-data.frame(t = seq(1, 
-                   100, 
-                   by=.001)) %>%
-  mutate(x = exp(d1 * t) * sin(t * f1 + p1) + exp(d3 * t) * sin(t * f3 + p3),
-         y = exp(d2 * t) * sin(t * f2 + p2) + exp(d4 * t) * sin(t * f4 + p4)) %>%
-  ggplot(aes(x, y)) +
-  geom_path(aes(color = 1 - (t - 2)^2,
-                size = 1 - (t - 2)^2)) + 
-  scale_color_gradientn(colors = col_palette) +
-  scale_size(range = c(0.1, 1.0)) +
-  coord_equal(expand = TRUE) +
-  theme_void() + 
-  theme(legend.position = "none",
-        panel.background = element_rect(color = NA,
-                                       fill = "black"),
-        plot.background = element_rect(color = NA,
-                                       fill = "black"))
+data.frame(t = seq(1, 
+                   100, 
+                   by=.001)) %>%
+  mutate(x = exp(d1 * t) * sin(t * f1 + p1) + exp(d3 * t) * sin(t * f3 + p3),
+         y = exp(d2 * t) * sin(t * f2 + p2) + exp(d4 * t) * sin(t * f4 + p4)) %>%
+  ggplot(aes(x, y)) +
+  geom_path(aes(color = 1 - (t - 2)^2,
+                size = 1 - (t - 2)^2)) + 
+  scale_color_gradientn(colors = col_palette) +
+  scale_size(range = c(0.1, 1.0)) +
+  coord_equal(expand = TRUE) +
+  theme_void() + 
+  theme(legend.position = "none",
+        panel.background = element_rect(color = NA,
+                                       fill = "black"),
+        plot.background = element_rect(color = NA,
+                                       fill = "black"))
 
 ggsave(glue("harmonograph-{palette_name}-{seed}.png"))
 ```

@@ -47,10 +47,10 @@ angle <- runif(1, 0, 180) * pi/180
 n_steps <- sample.int(50, 1)
 for(i in 1:n_steps){
   df_1 <- df_1 %>%
-    rbind(df %>%
+    rbind(df_1 %>%
             slice_tail() %>%
-            mutate(x = x + rad * cos(angle * i),
-                   y = y + rad * sin(angle * i)))
+            mutate(x = x + rad_1 * cos(angle * i),
+                   y = y + rad_1 * sin(angle * i)))
 }
 
 n_steps <- sample.int(50, 1)
@@ -58,8 +58,8 @@ for(i in 1:n_steps){
   df_2 <- df_2 %>%
     rbind(df_2 %>%
             slice_tail() %>%
-            mutate(x = x + rad * cos(angle * i),
-                   y = y + rad * sin(angle * i)))
+            mutate(x = x + rad_2 * cos(angle * i),
+                   y = y + rad_2 * sin(angle * i)))
 }
 
 # Bind walks
@@ -67,12 +67,12 @@ df <- rbind(df_1,
             df_2)
 
 # Randomly select a color palette (MexBrewer Edition)
-palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
-col_palette <- mex.brewer(palette_name, n = 25)
+# palette_name <- sample(c("Alacena", "Atentado", "Aurora", "Concha", "Frida", "Revolucion", "Ronda", "Tierra"), 1)
+# col_palette <- mex.brewer(palette_name, n = 25)
 
 # Randomly select a color palette (MetBrewer Edition)
-# palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
-# col_palette <- met.brewer(palette_name, n = 25)
+palette_name <- sample(c("Austria", "Cassatt1", "Cassatt2", "Cross", "Degas", "Derain", "Egypt", "Gauguin", "Greek", "Hiroshige", "Hokusai1", "Hokusai2", "Hokusai3", "Homer1", "Homer2", "Ingres", "Isfahan1", "Isfahan2", "Juarez", "Klimt", "Lakota", "Manet", "Monet", "Moreau", "Morgenstern", "Nattier", "Navajo", "NewKingdom", "Nizami", "OKeeffe1", "OKeeffe2", "Peru1", "Peru2", "Pillement", "Pissaro", "Redon", "Renoir", "Robert", "Signac", "Stevens", "Tara", "Thomas", "Tiepolo", "Troy", "Tsimshian", "VanGogh1", "VanGogh2", 'VanGogh3', "Veronese", "Wissing"), 1)
+col_palette <- met.brewer(palette_name, n = 25)
 
 # Select a color from the palette
 col_fill <- sample(col_palette, 6)
@@ -81,24 +81,55 @@ col_fill <- sample(col_palette, 6)
 x0_1 <- mean(df_1$x)
 y0_1 <- mean(df_1$y) 
 
-# Coordinates of center of first circle
+# Coordinates of center of second circle
 x0_2 <- mean(df_2$x)
 y0_2 <- mean(df_2$y) 
 
 # Plot limits are the tightest of the radius or the extents of the walk
-cmin <- min(min(df$x),min(df$y), -rad)
-cmax <- max(max(df$x), max(df$y), rad)
+cmin_1 <- min(min(df_1$x),min(df_1$y), -rad_1)
+cmax_1 <- max(max(df_1$x), max(df_1$y), rad_1)
+
+cmin_2 <- min(min(df_2$x),min(df_2$y), -rad_2)
+cmax_2 <- max(max(df_2$x), max(df_2$y), rad_2)
+
+cmin <- min(cmin_1, cmin_2)
+cmax <- max(cmax_1, cmax_2)
+
+# Make noise in the interval of cmin and cmax (uses package {ambient})
+noise_complaint <- expand.grid(x = seq(floor(cmin), 
+                                       ceiling(cmax),
+                                       by = (cmax  - cmin)/1000),
+                              y = seq(floor(cmin), 
+                                      ceiling(cmax), 
+                                      by = (cmax  - cmin)/1000)) %>%
+  mutate(noise = ambient::gen_perlin(x, 
+                                     y,
+                                     frequency = runif(1, 0.1, 2)),
+         noise = 0.5 * (noise - min(noise))/(max(noise) - min(noise)))
 
 # Plot
 ggplot() +
-  # Plot regular polygon to serve as background to the radial pattern
+  geom_raster(
+    data = noise_complaint, # %>%
+      #slice_sample(prop = 0.5), 
+    aes(x, y, alpha = noise),
+    fill = col_fill[6]) +
+  # scale_fill_gradientn(
+  #   colours = col_fill) +
+
+  # geom_point(data = noise_complaint %>%
+  #              as.data.frame() %>%
+  #              slice_sample(prop = 0.1),
+  #            aes(x = x, y = y, alpha = noise, group = seed_num),
+  #            color = "black",
+  #            size = 0.1)
   geom_regon(aes(x0 = x0_1, y0 = y0_1,
                  angle = 0,
                  # The number of sides is a random number
                  sides = sample(3:50, 1),
                  # The radius of the circle rad
                  r = rad_1),
-             alpha = 0.5,
+             alpha = 1,
              # Use the first color to fill the circle
              fill = col_fill[1],
              color = NA) +
@@ -108,7 +139,7 @@ ggplot() +
                  sides = sample(3:50, 1),
                  # The radius of the circle rad
                  r = rad_2),
-             alpha = 0.5,
+             alpha = 1,
              # Use the first color to fill the circle
              fill = col_fill[2],
              color = NA) +
@@ -119,9 +150,9 @@ ggplot() +
             color = col_fill[2],
             size = 25/n_steps) +
   # Set the limits of the plot
-  coord_equal() +
-  #coord_equal(xlim = c(x0 + cmin, x0 + cmax),
-  #            ylim = c(y0 + cmin, y0 + cmax)) + 
+  #coord_equal() +
+  coord_equal(xlim = c(cmin, cmax),
+              ylim = c(cmin, cmax)) + 
   # Theme parameters
   theme_void() + 
   theme(legend.position = "none",
@@ -129,6 +160,8 @@ ggplot() +
         plot.background = element_rect(color = NA,
                                        fill = col_fill[3]))
 
-# Save plot
-ggsave(glue("minimal-radial-twin-walk-paths-{palette_name}-{seed}.png"))
+#Save plot
+ggsave(glue("minimal-radial-twin-walk-paths-{palette_name}-{seed}.png"),
+       height = 7,
+       width = 7)
 ```
